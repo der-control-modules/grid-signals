@@ -25,7 +25,7 @@ class ComEdPricing:
         """ Extract prices and timestamps from fetched data based on type. """
         data = self.fetch_data(type)
         prices = [float(item['price']) for item in data if 'price' in item]
-        times = [datetime.fromtimestamp(int(item['millisUTC']) / 1000) for item in data if 'millisUTC' in item]
+        times = [datetime.datetime.fromtimestamp(int(item['millisUTC']) / 1000) for item in data if 'millisUTC' in item]
 
         return prices, times
 
@@ -36,12 +36,13 @@ class ComEdPricing:
 
         return {'realtime': (realtime_prices, realtime_times), 'day_ahead': (day_ahead_prices, day_ahead_times)}
 
-# Usage
-start_date = datetime(2021, 1, 1)
-end_date = datetime(2021, 12, 1)
-comed_pricing = ComEdPricing(start_date, end_date)
-data = comed_pricing.get_realtime_and_day_ahead()
+if __name__ == "__main__":
+    # Usage
+    start_date = datetime.datetime(2021, 1, 1)
+    end_date = datetime.datetime(2021, 12, 1)
+    comed_pricing = ComEdPricing(start_date, end_date)
+    data = comed_pricing.get_realtime_and_day_ahead()
 
-# Access real-time and day-ahead data
-realtime_prices, realtime_times = data['realtime']
-day_ahead_prices, day_ahead_times = data['day_ahead']
+    # Access real-time and day-ahead data
+    realtime_prices, realtime_times = data['realtime']
+    day_ahead_prices, day_ahead_times = data['day_ahead']

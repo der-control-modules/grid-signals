@@ -16,8 +16,8 @@
             "real-time":true,
             "method":"API", 
             "API_information": {
-            "API_key": "9t9jNatVh8KUN",
-             "zone":"US-NW-PACW" 
+            "API_key": "<your_electricity_maps_api_key>",
+             "zone":"US-NW-PACW"
             }
         }
     }

@@ -22,7 +22,7 @@ This repository was extracted from the
 
 | Path                                | Description                                                                                   |
 |-------------------------------------|-----------------------------------------------------------------------------------------------|
-| `grid-signals-agent/agent.py`       | `GridSignalAgent` — the VOLTTRON agent that schedules and publishes price and CO2 signals.    |
+| `grid_signals_agent/agent.py`       | `GridSignalAgent` — the VOLTTRON agent that schedules and publishes price and CO2 signals.    |
 | `price_signal/tou.py`               | `PriceProfileGenerator` — builds a 24-hour TOU price profile from interval/pricing config.    |
 | `price_signal/comed.py`             | `ComEdPricing` — fetches 5-minute / day-ahead prices from the ComEd hourly-pricing API.       |
 | `price_signal/pjm.py`               | `get_pjm_prices()` — fetches real-time and day-ahead prices from the PJM API.                  |

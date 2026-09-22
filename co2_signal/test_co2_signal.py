@@ -92,30 +92,15 @@ class ElectricityMapsAPI:
             new_history.append(new_entry)
         return new_history
 
-# Shift the historical data by 24 hours
+if __name__ == "__main__":
+    # Example usage
+    api_key = '<your_electricity_maps_api_key>'
+    zone = 'US-CAL-CISO'
+    api = ElectricityMapsAPI(api_key, zone)
 
+    # Test the functions for current and 24-hour data
+    co2_intensity = api.get_co2_intensity()
+    print("co2_intensity:", co2_intensity)
+    power_breakdown = api.get_power_breakdown()
 
-# Example usage
-api_key = '9t9jNatVh8KUN'  # Example key
-zone = 'US-CAL-CISO'
-api = ElectricityMapsAPI(api_key, zone)
-
-
-# Test the functions for current and 24-hour data
-
-co2_intensity = api.get_co2_intensity()
-print("co2_intensity:", co2_intensity)
-power_breakdown = api.get_power_breakdown()
-# co2_intensity_24hr = api.get_24hr_co2_intensity()
-# print("*************************************************")
-# print("co2_intensity_24hr:", co2_intensity_24hr)
-# # print("*************************************************")
-
-#print(json.dumps(api.shift_24hr_co2(), indent=2))
-print(json.dumps(api.shift_24hr_powerbreakdown(), indent=2))
-#print("Current CO2 Intensity:", co2_intensity)
-#print("Current Power Breakdown:", power_breakdown)
-# print("*************************************************")
-# print("co2_intensity_24hr:", co2_intensity_24hr)
-# print("*************************************************")
-# print("power_breakdown_24hr:", power_breakdown_24hr)
+    print(json.dumps(api.shift_24hr_powerbreakdown(), indent=2))

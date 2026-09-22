@@ -26,9 +26,10 @@ def get_pjm_prices(api_key):
         print("Failed to fetch prices")
         return None, None
 
-# Replace 'your_api_key' with your actual PJM API key
-api_key = 'your_api_key'
-real_time_prices, day_ahead_prices = get_pjm_prices(api_key)
+if __name__ == "__main__":
+    # Replace 'your_api_key' with your actual PJM API key
+    api_key = 'your_api_key'
+    real_time_prices, day_ahead_prices = get_pjm_prices(api_key)
 
-print("Real-Time Prices:", real_time_prices)
-print("Day-Ahead Prices:", day_ahead_prices)
+    print("Real-Time Prices:", real_time_prices)
+    print("Day-Ahead Prices:", day_ahead_prices)

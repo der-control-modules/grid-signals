@@ -36,16 +36,17 @@ class PriceProfileGenerator:
         print("Generating standard TOU pricing profile.")
         return self.generate_standard_profile()
 
-# Example TOU configuration JSON, structured according to your input
-tou_config = {
-    "type_of_tou_pricing": "standard",
-    "TOU_pricing": {
-            "interval":{"off-peak":[[0, 7], [21, 23]], "mid-peak":[[7, 10], [11, 12], [17, 21]] , "on-peak":[[10, 11], [12, 17]]},
-            "pricing":{"off-peak": 4.675, "mid-peak": 9.083, "on-peak": 15.925}
-            }
-}
+if __name__ == "__main__":
+    # Example TOU configuration JSON, structured according to your input
+    tou_config = {
+        "type_of_tou_pricing": "standard",
+        "TOU_pricing": {
+                "interval":{"off-peak":[[0, 7], [21, 23]], "mid-peak":[[7, 10], [11, 12], [17, 21]] , "on-peak":[[10, 11], [12, 17]]},
+                "pricing":{"off-peak": 4.675, "mid-peak": 9.083, "on-peak": 15.925}
+                }
+    }
 
-# Creating an instance of the PriceProfileGenerator with the provided TOU config
-generator = PriceProfileGenerator(tou_config['TOU_pricing'])
-profile = generator.generate_profile()
-print(profile)
+    # Creating an instance of the PriceProfileGenerator with the provided TOU config
+    generator = PriceProfileGenerator(tou_config['TOU_pricing'])
+    profile = generator.generate_profile()
+    print(profile)

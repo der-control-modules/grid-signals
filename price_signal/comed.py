@@ -25,7 +25,7 @@ class ComEdPricing:
         """ Extract prices and timestamps from fetched data based on type. """
         data = self.fetch_data(type)
         prices = [float(item['price']) for item in data if 'price' in item]
-        times = [datetime.fromtimestamp(int(item['millisUTC']) / 1000) for item in data if 'millisUTC' in item]
+        times = [datetime.datetime.fromtimestamp(int(item['millisUTC']) / 1000) for item in data if 'millisUTC' in item]
 
         return prices, times
 

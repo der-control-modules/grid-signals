@@ -72,16 +72,17 @@ class GridSignalAgent(Agent):
                     "price": {
                         "type_of_price_signal": "TOU",
                         "type_of_tou_pricing": "standard",
-                        "pricing": {
-                            "interval":{"off-peak":[16, 20], "mid-peak":[[14, 16], [21, 23]] , "on-peak":[0, 14]},
+                        "TOU_pricing": {
+                            "interval":{"off-peak":[[0, 7], [21, 23]], "mid-peak":[[7, 10], [18, 21]] , "on-peak":[[10, 18]]},
                             "pricing":{"off-peak": 0.13246, "mid-peak": 0.15878, "on-peak": 0.19598}
                             }
                         },
-                    "co2_signal": {
-                            "method":"API", 
+                    "co2": {
+                            "real-time":true,
+                            "method":"API",
                             "API_information": {
-                            "API_key": "9t9jNatVh8KUN",
-                            "zone":"US-CAL-BANC" 
+                            "API_key": "<your_electricity_maps_api_key>",
+                            "zone":"US-CAL-BANC"
                             }
                         }
                     }
@@ -157,7 +158,7 @@ class GridSignalAgent(Agent):
             if self.co2_config:
                 _log.debug(f"co2 config is not non")
                 co2_api_key = self.co2_config.get("API_information", {}).get("API_key", None)
-                co2_zone = self.co2_config.get("API_information", {}).get("Zone", None)
+                co2_zone = self.co2_config.get("API_information", {}).get("zone", None)
                 self.co2_signal = co2_api.ElectricityMapsAPI(co2_api_key, co2_zone )
                 next_run = datetime.now() + timedelta(minutes=2)
                 self.core.schedule(next_run, self.generate_next_24_co2_signal)
