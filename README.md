@@ -1,7 +1,12 @@
 # Grid Signals
 
-Utilities for generating and retrieving the grid signals used by the DER Control Modules —
-principally electricity **price signals** (time-of-use profiles and real-time market prices).
+A VOLTTRON agent that generates and publishes **grid service signals** for the DER Control
+Modules. It currently produces:
+
+- **Price signals** — time-of-use (TOU) price profiles, with helpers for ComEd and PJM
+  market prices.
+- **CO2 signals** — carbon intensity and power-generation breakdown (current and 24-hour
+  forecast) from the [Electricity Maps](https://www.electricitymaps.com/) API.
 
 This repository was extracted from the
 [`der-management`](https://github.com/der-control-modules/der-management) repository
@@ -9,105 +14,109 @@ This repository was extracted from the
 
 ## Requirements
 
-* python >= 3.8
-* Real-time price script (`Comed.py`): `numpy`, `pandas`, `matplotlib`, `pytz`
-* TOU price generator (`tou.py`): standard library only
+* python >= 3.10
+* volttron >= 10.0
+* `pandas`, `numpy`, `python-dateutil`, `requests`
 
-```shell
-pip install numpy pandas matplotlib pytz
-```
+## Repository structure
 
-## Contents
+| Path                                | Description                                                                                   |
+|-------------------------------------|-----------------------------------------------------------------------------------------------|
+| `grid-signals-agent/agent.py`       | `GridSignalAgent` — the VOLTTRON agent that schedules and publishes price and CO2 signals.    |
+| `price_signal/tou.py`               | `PriceProfileGenerator` — builds a 24-hour TOU price profile from interval/pricing config.    |
+| `price_signal/comed.py`             | `ComEdPricing` — fetches 5-minute / day-ahead prices from the ComEd hourly-pricing API.       |
+| `price_signal/pjm.py`               | `get_pjm_prices()` — fetches real-time and day-ahead prices from the PJM API.                  |
+| `price_signal/*_test.py`            | Tests for the price-signal helpers.                                                           |
+| `co2_signal/co2_api.py`             | `ElectricityMapsAPI` — current and 24-hour carbon intensity and power breakdown.              |
+| `co2_signal/zone_names.json`        | Reference list of Electricity Maps zone identifiers.                                          |
+| `config`, `config_example`          | Example agent configurations.                                                                 |
+| `config.json`                       | Descriptive catalog of the signal types this module targets (not runtime config).            |
+| `data/`                             | Sample price/load data files.                                                                 |
+| `setup.py`                          | Package/installation metadata.                                                                |
+| `prices/`                           | Legacy standalone price scripts, superseded by `price_signal/` (kept for reference).          |
 
-| Path                        | Description                                                                                              |
-|-----------------------------|----------------------------------------------------------------------------------------------------------|
-| `config.json`               | Reference catalog of the signal types this module targets (see [Signal catalog](#signal-catalog)). Descriptive only — not loaded by the code. |
-| `prices/TOU/tou.py`         | `PriceProfileGenerator` — builds 24-hour time-of-use price profiles from a JSON definition.              |
-| `prices/TOU/tou.json`       | Example TOU price definition consumed by `tou.py`.                                                       |
-| `prices/real_time/Comed.py` | Standalone script that pulls ComEd real-time prices from their public API and analyzes them.             |
+## Configuration
 
-## Time-of-use price profiles (`prices/TOU`)
+The agent is configured through the VOLTTRON configuration store. Configuration is nested
+under `type_of_grid_service_signals`, with a `price` block and/or a `co2` block.
 
-`PriceProfileGenerator` reads a JSON file of price tiers and produces a list of 24 hourly
-prices ($/kWh). Three profile types are supported:
+| Parameter                | Description                                                                             |
+|--------------------------|-----------------------------------------------------------------------------------------|
+| `campus`                 | Campus identifier used to build the publish topics.                                     |
+| `run_dayahead_schedule`  | Cron expression for the day-ahead run (price profile + 24-hour CO2 forecast).           |
+| `run_realtime_schedule`  | Cron expression for the real-time CO2 run (only used when `co2.real-time` is true).      |
 
-| Type       | JSON keys                                                                              | Behavior                                                             |
-|------------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `standard` | `peak_prices`, `off_peak_prices`                                                       | Peak price during peak hours, otherwise off-peak.                   |
-| `critical` | `critical_peak_prices`, `peak_prices`, `off_peak_prices`                               | Critical-peak overrides peak, which overrides off-peak.             |
-| `seasonal` | `summer_peak_prices`, `summer_off_peak_prices`, `winter_peak_prices`, `winter_off_peak_prices` | Uses summer tiers for months 6–8, winter tiers otherwise.  |
+### Price block (`type_of_grid_service_signals.price`)
 
-Each price tier is a list of `[start_hour, end_hour, price]` entries. Intervals are
-**half-open** — `start_hour <= hour < end_hour` — and the tiers for a given profile must
-together cover **all 24 hours** (0–23); an uncovered hour raises `StopIteration`.
+| Parameter               | Description                                                                    |
+|-------------------------|--------------------------------------------------------------------------------|
+| `type_of_price_signal`  | Currently `TOU`.                                                               |
+| `type_of_tou_pricing`   | TOU variant, e.g. `standard`.                                                  |
+| `TOU_pricing.interval`  | Hour ranges per tier (`off-peak`, `mid-peak`, `on-peak`), as `[start, end)` pairs. |
+| `TOU_pricing.pricing`   | Price ($/kWh) for each tier.                                                   |
 
-### Usage
+### CO2 block (`type_of_grid_service_signals.co2`)
 
-As a library:
+| Parameter                      | Description                                                            |
+|--------------------------------|------------------------------------------------------------------------|
+| `real-time`                    | If true, also publishes real-time CO2 on `run_realtime_schedule`.      |
+| `method`                       | `API`.                                                                 |
+| `API_information.API_key`      | Electricity Maps API token. **Do not commit a real key** (see below).  |
+| `API_information.zone`         | Electricity Maps zone id (e.g. `US-NW-PACW`); see `co2_signal/zone_names.json`. |
 
-```python
-from tou import PriceProfileGenerator
-
-generator = PriceProfileGenerator("prices/TOU/tou.json")
-
-# Standard / critical profiles:
-profile = generator.generate_profile("standard")
-
-# Seasonal profile requires the month (1–12):
-summer_profile = generator.generate_profile("seasonal", month=7)
-
-# profile is a list of 24 hourly prices in $/kWh
-```
-
-Or run it interactively, which prompts for the profile type (and month, if seasonal) and
-prints the resulting 24-hour profile:
-
-```shell
-python prices/TOU/tou.py
-```
-
-### Example definition (`tou.json`)
+### Example
 
 ```json
 {
-  "standard": {
-    "peak_prices": [[0, 6, 0.15], [18, 24, 0.20]],
-    "off_peak_prices": [[6, 18, 0.10]]
+  "campus": "PNNL",
+  "run_dayahead_schedule": "0 0 * * *",
+  "run_realtime_schedule": "0 * * * *",
+  "type_of_grid_service_signals": {
+    "price": {
+      "type_of_price_signal": "TOU",
+      "type_of_tou_pricing": "standard",
+      "TOU_pricing": {
+        "interval": {"off-peak": [[0, 7], [21, 23]], "mid-peak": [[7, 10], [18, 21]], "on-peak": [[10, 18]]},
+        "pricing": {"off-peak": 0.04675, "mid-peak": 0.09083, "on-peak": 0.15925}
+      }
+    },
+    "co2": {
+      "real-time": true,
+      "method": "API",
+      "API_information": {"API_key": "<your_electricity_maps_api_key>", "zone": "US-NW-PACW"}
+    }
   }
 }
 ```
 
-> Note: the `critical` block in the bundled `tou.json` does not cover hours 0–5, so
-> `generate_profile("critical")` will fail until those hours are added. Extend the tiers
-> to cover the full day before using it.
+> **Security:** keep API keys out of version control. Load them from an environment
+> variable or a local, git-ignored config file rather than committing them.
 
-## Real-time prices (`prices/real_time/Comed.py`)
+## Behavior and published topics
 
-`Comed.py` is an exploratory analysis script (not an importable module) that:
+On configuration the agent schedules its runs and publishes to topics derived from `campus`:
 
-1. Fetches 5-minute real-time prices from the ComEd hourly-pricing API for a
-   **hard-coded date range** (currently the 2021 calendar year).
-2. Resamples them to hourly averages and writes them to CSV in the current working
-   directory (e.g. `price_comed_2021.csv`).
-3. Computes daily variance/standard deviation, identifies the highest-variance days, and
-   plots the results with matplotlib.
+| Signal                     | Trigger                              | Topic                                                                    |
+|----------------------------|--------------------------------------|--------------------------------------------------------------------------|
+| TOU price (per hour)       | `run_dayahead_schedule`              | `devices/<campus>/grid_information/price/all` (point `tou`, cents)       |
+| 24-hour CO2 forecast       | `run_dayahead_schedule`              | `record/<campus>/grid_information/co2/forecast/{carbonIntensity,powerConsumptionBreakdown}` |
+| Real-time CO2              | `run_realtime_schedule` (if enabled) | `record/<campus>/grid_information/co2/real_time/{carbonIntensity,powerConsumptionBreakdown}` |
 
-Because the URL and date range are hard-coded and the script executes on import, edit the
-range in the source and run it directly:
+The price run builds a 24-hour profile, rotates it so it starts at the current hour, and
+publishes one message per upcoming hour. The CO2 forecast run fetches the last 24 hours of
+Electricity Maps data and shifts the timestamps forward 24 hours as a naive forecast.
+
+## Installation
+
+Before installing, VOLTTRON should be installed and running with its virtual environment
+active. See the [VOLTTRON platform](https://github.com/eclipse-volttron/volttron-core).
 
 ```shell
-python prices/real_time/Comed.py
+vctl install grid-signals --tag grid-signals --start
 ```
 
-API reference: <https://hourlypricing.comed.com/hp-api/>
+## References
 
-## Signal catalog
-
-`config.json` documents the broader set of grid signals this module is intended to cover:
-
-- **Price signals** — real-time prices (e.g. ComEd, PJM), time-of-use (standard, seasonal,
-  critical peak / CPP), and prices sourced from CSV/database/custom uploads.
-- **Grid service signals** — direct signals (peak/emergency demand response, renewable
-  integration), CO2 signals, and OpenADR-style event signals.
-
-It is a descriptive catalog rather than runtime configuration.
+- ComEd hourly pricing API: <https://hourlypricing.comed.com/hp-api/>
+- PJM data API: <https://www.pjm.com/markets-and-operations/etools/data-miner-2>
+- Electricity Maps API: <https://docs.electricitymaps.com/>
