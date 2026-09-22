@@ -1,0 +1,64 @@
+{
+    "Type of price signal": {
+        "Real time": {
+            "Provider": [
+                "Comed",
+                "PJM"
+            ],
+            "Type of real-time prices": {
+                "Hourly real time prices": {},
+                "Day ahead real time prices": {},
+                "Two/Three tier": {
+                    "Interval": [
+                        "off-peak",
+                        "mid-peak (optional)",
+                        "on-peak"
+                    ],
+                    "Pricing": [
+                        "off-peak",
+                        "mid-peak(optional)",
+                        "on-peak"
+                    ]
+                }
+            },
+            "From CSV": {
+                "CSV File": {},
+                "From Database": {},
+                "Custom upload": {}
+            }
+        },
+        "TOU": {
+            "Traditional kW/kWh": {},
+            "Type of TOU pricing": {
+                "Standard": {},
+                "Seasonal TOU": {
+                    "Summer": "Define months",
+                    "Winter": "Define months",
+                    "Transition season": "Define months"
+                },
+                "Critical peak": {},
+                "CPP": {
+                    "Duration and pricing": {}
+                }
+            }
+        }
+    },
+    "Type of grid service signals": {
+        "Price": {},
+        "Direct signal": {},
+        "CO2 signal": {
+            "Type of CO2 signal": {
+                "Real time - get it through API": {},
+                "CSV": {}
+            }
+        },
+        "Type of direct signals": {
+            "Peak demand response": {},
+            "Emergency demand response": {},
+            "Renewable integration signal": {}
+        }
+    },
+    "Notes": {
+        "OpenADR": "OpenADR allows utilities or grid operators to send signals to customers to reduce or shift their electricity usage during peak times or in response to grid emergencies."
+    }
+}
