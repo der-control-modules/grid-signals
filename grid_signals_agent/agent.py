@@ -156,7 +156,7 @@ class GridSignalAgent(Agent):
             print(f"Co2 = {self.co2_config}")
             
             if self.co2_config:
-                _log.debug(f"co2 config is not non")
+                _log.debug("co2 config is not none")
                 co2_api_key = self.co2_config.get("API_information", {}).get("API_key", None)
                 co2_zone = self.co2_config.get("API_information", {}).get("zone", None)
                 self.co2_signal = co2_api.ElectricityMapsAPI(co2_api_key, co2_zone )
@@ -164,7 +164,7 @@ class GridSignalAgent(Agent):
                 self.core.schedule(next_run, self.generate_next_24_co2_signal)
                 self.core.schedule(cron(self.run_dayahead_schedule), self.generate_next_24_co2_signal)
                 if self.co2_config.get("real-time"):
-                    _log.debug(f"real-time presentation")
+                    _log.debug("real-time CO2 signal scheduling enabled")
                     self.core.schedule(cron(self.run_realtime_schedule), self.generate_real_time_co2)
                 
         
