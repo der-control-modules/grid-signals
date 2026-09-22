@@ -1,4 +1,5 @@
 import json
+import os
 
 class PriceProfileGenerator:
     def __init__(self, filename):
@@ -61,7 +62,7 @@ class PriceProfileGenerator:
         return profile
 
 def main():
-    filename = "OptSimulation/grid_signals/prices/TOU/tou.json"
+    filename = os.path.join(os.path.dirname(__file__), "tou.json")
     generator = PriceProfileGenerator(filename)
     
     type_of_tou = input("Enter the type of TOU prices (standard, critical, seasonal): ")

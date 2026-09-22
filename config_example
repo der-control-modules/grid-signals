@@ -1,0 +1,21 @@
+{ 
+"campus": "PNNL",
+"building": "SEB",
+"type_of_grid_service_signals": {
+    "price": {
+        "type_of_price_signal": "TOU",
+        "type_of_tou_pricing": "standard",
+        "pricing": {
+            "interval":{"off-peak":[16, 20], "mid-peak":[[14, 16], [21, 23]] , "on-peak":[0, 14]},
+            "pricing":{"off-peak": 0.13246, "mid-peak": 0.15878, "on-peak": 0.19598}
+            }
+        },
+    "co2_signal": {
+            "method":"API", 
+            "API_information": {
+            "API_key": "9t9jNatVh8KUN",
+             "zone":"US-CAL-BANC" 
+            }
+        }
+    }
+}

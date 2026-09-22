@@ -1,0 +1,18 @@
+{
+    "standard": {
+      "peak_prices": [[0, 6, 0.15], [18, 24, 0.20]],
+      "off_peak_prices": [[6, 18, 0.10]]
+    },
+    "critical": {
+      "critical_peak_prices": [[16, 20, 0.30]],
+      "peak_prices": [[12, 16, 0.25], [20, 24, 0.20]],
+      "off_peak_prices": [[6, 12, 0.15]]
+    },
+    "seasonal": {
+      "summer_peak_prices": [[12, 16, 0.18], [20, 24, 0.22]],
+      "summer_off_peak_prices": [[0, 12, 0.12], [16, 20, 0.16]],
+      "winter_peak_prices": [[16, 20, 0.20], [0, 8, 0.18]],
+      "winter_off_peak_prices": [[8, 16, 0.14], [20, 24, 0.16]]
+    }
+  }
+  
