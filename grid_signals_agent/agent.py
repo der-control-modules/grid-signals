@@ -153,8 +153,14 @@ class GridSignalAgent(Agent):
                 
             # Handle CO2 signals if present
             self.co2_config = self.grid_service_signals.get("co2", {})
-            print(f"Co2 = {self.co2_config}")
-            
+            # Log what loaded without the config contents: it holds the API key.
+            co2_api_info = self.co2_config.get("API_information", {})
+            _log.debug(
+                "Co2 config loaded: zone=%s api_key_set=%s",
+                co2_api_info.get("zone"),
+                bool(co2_api_info.get("API_key")),
+            )
+
             if self.co2_config:
                 _log.debug("co2 config is not none")
                 co2_api_key = self.co2_config.get("API_information", {}).get("API_key", None)
