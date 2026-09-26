@@ -78,7 +78,7 @@ class GridSignalAgent(Agent):
                             }
                         },
                     "co2": {
-                            "real-time":true,
+                            "real-time":True,
                             "method":"API",
                             "API_information": {
                             "API_key": "<your_electricity_maps_api_key>",
