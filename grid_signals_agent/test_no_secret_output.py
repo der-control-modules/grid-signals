@@ -61,3 +61,12 @@ def test_co2_config_load_never_prints_or_logs_the_key(capsys, caplog):
     assert MARKER not in captured.err
     for record in caplog.records:
         assert MARKER not in record.getMessage()
+
+
+def test_null_co2_config_does_not_raise(caplog):
+    """A config with an explicit "co2": null must not crash configure_main."""
+    agent = _make_agent()
+    contents = {"type_of_grid_service_signals": {"co2": None}}
+    with caplog.at_level(logging.DEBUG):
+        agent.configure_main("config", "NEW", contents)
+    assert agent.co2_config is None
