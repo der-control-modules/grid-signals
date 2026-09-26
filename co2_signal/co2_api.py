@@ -1,6 +1,16 @@
 import requests
 from datetime import datetime, timedelta
 
+
+def _log_request_error(endpoint: str, error: requests.RequestException) -> None:
+    # str(error) embeds the full request URL, auth_token query param
+    # included, so only the endpoint (no query string) and the status
+    # or error type are safe to print here.
+    status = error.response.status_code if error.response is not None else None
+    detail = f'status {status}' if status is not None else type(error).__name__
+    print(f'error: request to {endpoint} failed: {detail}')
+
+
 class ElectricityMapsAPI:
     def __init__(self, api_key, zone):
         self.api_key = api_key
@@ -16,7 +26,7 @@ class ElectricityMapsAPI:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f'error: {str(e)}')
+            _log_request_error(url, e)
             return None
 
     def get_power_breakdown(self):
@@ -28,7 +38,7 @@ class ElectricityMapsAPI:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f'error: {str(e)}')
+            _log_request_error(url, e)
             return None
 
     def get_24hr_co2_intensity(self):
@@ -47,7 +57,7 @@ class ElectricityMapsAPI:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f'error: {str(e)}')
+            _log_request_error(url, e)
             return None
 
     def get_24hr_power_breakdown(self):
@@ -66,6 +76,6 @@ class ElectricityMapsAPI:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f'error: {str(e)}')
+            _log_request_error(url, e)
             return None
         
