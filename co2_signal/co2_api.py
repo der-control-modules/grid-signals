@@ -1,17 +1,35 @@
 import requests
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
-# Bounds every call so a stalled server cannot hang the caller indefinitely.
+# Bounds each connect and each socket read; a server that stays connected
+# and trickles bytes forever is not bounded by this alone.
 REQUEST_TIMEOUT_SECONDS = 10
 
 
 def _log_request_error(endpoint: str, error: requests.RequestException) -> None:
-    # str(error) embeds the full request URL and headers, so only the
-    # endpoint (no query string) and the status or error type are safe
-    # to print here.
+    # str(error) embeds the full request URL, so only the endpoint (no
+    # query string) and the status or error type are safe to print here.
     status = error.response.status_code if error.response is not None else None
     detail = f'status {status}' if status is not None else type(error).__name__
     print(f'error: request to {endpoint} failed: {detail}')
+
+
+class _HostScopedAuthSession(requests.Session):
+    """`Session.rebuild_auth` only strips `Authorization` on a redirect
+    to a new host; our key travels in `auth-token`, so it needs the same
+    treatment. A same-host redirect keeps the header.
+    """
+
+    def rebuild_auth(self, prepared_request, response):
+        super().rebuild_auth(prepared_request, response)
+        headers = prepared_request.headers
+        if 'auth-token' not in headers:
+            return
+        old_host = urlparse(response.request.url).hostname
+        new_host = urlparse(prepared_request.url).hostname
+        if old_host != new_host:
+            del headers['auth-token']
 
 
 class ElectricityMapsAPI:
@@ -19,6 +37,7 @@ class ElectricityMapsAPI:
         self.api_key = api_key
         self.zone = zone
         self.base_url = 'https://api.electricitymap.org/v3'
+        self._session = _HostScopedAuthSession()
 
     def _auth_headers(self) -> dict[str, str]:
         # Vendor docs authenticate every endpoint but /zones this way; see #7.
@@ -29,7 +48,7 @@ class ElectricityMapsAPI:
         url = f'{self.base_url}/carbon-intensity/latest'
         params = {'zone': self.zone}
         try:
-            response = requests.get(
+            response = self._session.get(
                 url, params=params, headers=self._auth_headers(),
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
@@ -44,7 +63,7 @@ class ElectricityMapsAPI:
         url = f'{self.base_url}/power-breakdown/latest'
         params = {'zone': self.zone}
         try:
-            response = requests.get(
+            response = self._session.get(
                 url, params=params, headers=self._auth_headers(),
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
@@ -65,7 +84,7 @@ class ElectricityMapsAPI:
             'end': end_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
         try:
-            response = requests.get(
+            response = self._session.get(
                 url, params=params, headers=self._auth_headers(),
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
@@ -86,7 +105,7 @@ class ElectricityMapsAPI:
             'end': end_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
         try:
-            response = requests.get(
+            response = self._session.get(
                 url, params=params, headers=self._auth_headers(),
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
