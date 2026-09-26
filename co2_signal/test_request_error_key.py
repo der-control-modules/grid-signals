@@ -1,6 +1,6 @@
 """A failed request must never print or log the API key.
 
-`requests` embeds the full request URL and headers in the message of a
+`requests` embeds the full request URL in the message of a
 `RequestException`. The key must not reach stdout, stderr, or a log
 record for any of the four request methods.
 """
@@ -45,7 +45,7 @@ def _connection_error():
 @pytest.mark.parametrize("make_error", [_http_error, _connection_error])
 def test_request_failure_never_carries_the_key(method_name, make_error, capsys, caplog):
     api = ElectricityMapsAPI(api_key=MARKER, zone="US-CAL-CISO")
-    with patch("co2_signal.co2_api.requests.get", side_effect=make_error()):
+    with patch("co2_signal.co2_api._HostScopedAuthSession.get", side_effect=make_error()):
         with caplog.at_level(logging.DEBUG):
             result = getattr(api, method_name)()
 

@@ -28,7 +28,7 @@ def _mock_response():
 def test_request_has_a_timeout(method_name):
     api = ElectricityMapsAPI(api_key=MARKER, zone="US-CAL-CISO")
     with patch(
-        "co2_signal.co2_api.requests.get", return_value=_mock_response()
+        "co2_signal.co2_api._HostScopedAuthSession.get", return_value=_mock_response()
     ) as mock_get:
         getattr(api, method_name)()
 
